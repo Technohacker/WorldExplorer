@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://bshurailj530m" path="res://Vehicle/Vehicle.tscn" id="1_88t5x"]
 
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_3tpkc"]
-plane = Plane(0, 1, 0, 50)
+plane = Plane(0, 1, 0, 20)
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_jjnmd"]
 sky_top_color = Color(0.190234, 0.233818, 0.294432, 1)
@@ -21,6 +21,8 @@ sky_material = SubResource("ProceduralSkyMaterial_jjnmd")
 background_mode = 2
 sky = SubResource("Sky_l5g82")
 ambient_light_sky_contribution = 0.0
+glow_enabled = true
+glow_bloom = 1.0
 fog_light_color = Color(0.121505, 0.242787, 0.310306, 1)
 fog_sky_affect = 0.96
 fog_height = 0.85
@@ -38,7 +40,9 @@ script = ExtResource("1_54a3f")
 [node name="Vehicle" parent="." instance=ExtResource("1_88t5x")]
 transform = Transform3D(-1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, 0, 4.33126, 0)
 
-[node name="Camera3D" type="Camera3D" parent="Vehicle"]
+[node name="Focus" type="Node3D" parent="Vehicle"]
+
+[node name="Camera3D" type="Camera3D" parent="Vehicle/Focus"]
 transform = Transform3D(1, 0, 0, 0, 0.983255, 0.182236, 0, -0.182236, 0.983255, 0, 1.934, 5.57)
 current = true
 
@@ -56,3 +60,5 @@ shape = SubResource("WorldBoundaryShape3D_3tpkc")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_h4802")
+
+[node name="Tile" type="Node3D" parent="."]

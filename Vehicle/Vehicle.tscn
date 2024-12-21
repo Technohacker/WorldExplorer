@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://bshurailj530m"]
+[gd_scene load_steps=8 format=3 uid="uid://bshurailj530m"]
 
 [ext_resource type="Script" path="res://Vehicle/Vehicle.gd" id="1_e7yuc"]
 
@@ -12,10 +12,28 @@ albedo_color = Color(0.0694167, 0.556811, 0.41727, 1)
 material = SubResource("StandardMaterial3D_bjjc0")
 size = Vector3(1, 2, 0.25)
 
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_d2ufn"]
+emission_shape_scale = Vector3(0.5, 0.125, 0.1)
+emission_shape = 3
+emission_box_extents = Vector3(1, 1, 1)
+initial_velocity_min = 5.13
+initial_velocity_max = 5.13
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pejjq"]
+emission_enabled = true
+emission = Color(1, 1, 1, 1)
+emission_energy_multiplier = 16.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_okeu0"]
+material = SubResource("StandardMaterial3D_pejjq")
+size = Vector3(0.1, 0.1, 0.1)
+
 [node name="Vehicle" type="RigidBody3D"]
+mass = 1000.0
+lock_rotation = true
 script = ExtResource("1_e7yuc")
 MAX_ACCELERATION = 30.0
-MAX_TURN_TORQUE = 30.0
+MAX_TURN_TORQUE = 120.0
 
 [node name="Collision" type="CollisionShape3D" parent="."]
 shape = SubResource("BoxShape3D_q43yl")
@@ -26,3 +44,9 @@ shape = SubResource("BoxShape3D_q43yl")
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0)
 mesh = SubResource("PrismMesh_br8nm")
 skeleton = NodePath("../..")
+
+[node name="GPUParticles3D" type="GPUParticles3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1)
+amount = 128
+process_material = SubResource("ParticleProcessMaterial_d2ufn")
+draw_pass_1 = SubResource("BoxMesh_okeu0")

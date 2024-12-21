@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://b876q8f6bnygn"]
+
+[ext_resource type="Script" path="res://MapBuilder/Building/Building.gd" id="1_ls8b2"]
+
+[node name="Building" type="Node3D"]
+script = ExtResource("1_ls8b2")
+
+[node name="Mesh" type="CSGPolygon3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+use_collision = true

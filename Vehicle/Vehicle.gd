@@ -15,6 +15,8 @@ func _physics_process(delta: float) -> void:
 	var thrust_acc = MAX_ACCELERATION * (
 		Input.get_action_strength("forward_thrust") * Vector3.FORWARD
 		+ Input.get_action_strength("reverse_thrust") * Vector3.BACK
+		+ Input.get_action_strength("turn_left") * Vector3.LEFT
+		+ Input.get_action_strength("turn_right") * Vector3.RIGHT
 	)
 
 	# Turn
@@ -30,7 +32,7 @@ func _physics_process(delta: float) -> void:
 	
 
 	var final_force = force_for_accel(thrust_acc)
-	var final_torque = force_for_accel(input_turn_torque)
+	#var final_torque = force_for_accel(input_turn_torque)
 
 	self.apply_central_force(self.basis * final_force)
-	self.apply_torque(self.basis * final_torque)
+	#self.apply_torque(self.basis * final_torque)

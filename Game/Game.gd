@@ -2,6 +2,8 @@ extends Node3D
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
 	const QUERY_FORMAT: String = "
 		[out:json];
 		(
@@ -18,7 +20,7 @@ func _ready() -> void:
 
 	# Long, Lat
 	var start_coord = Vector2(-74.01264, 40.72619)
-	var end_coord = start_coord + Vector2(0.01, 0.01)
+	var end_coord = start_coord + Vector2(0.04, 0.04)
 
 	http.request(
 		"https://overpass-api.de/api/interpreter",
@@ -34,10 +36,14 @@ func _ready() -> void:
 	var osmjson: String = res[3].get_string_from_utf8()
 	print("Response received")
 
-	var tile = MapBuilder.prepare_tile_for_osmjson(osmjson, start_coord)
+	await MapBuilder.prepare_tile_for_osmjson($Tile, osmjson, start_coord)
 
-	self.add_child(tile)
+func _input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion:
+		var camera: Node3D = $Vehicle/Focus
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	pass
+		var rot = camera.rotation
+		rot.y -= deg_to_rad(event.relative.x * 0.1)
+		rot.x -= deg_to_rad(event.relative.y * 0.1)
+
+		camera.set_rotation(rot)

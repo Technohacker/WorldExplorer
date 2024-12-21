@@ -1,0 +1,23 @@
+[gd_scene load_steps=3 format=3 uid="uid://cphg1rj6s4mcj"]
+
+[ext_resource type="Script" path="res://MapBuilder/Road/Road.gd" id="1_vsxyy"]
+
+[sub_resource type="Curve3D" id="Curve3D_uh3se"]
+
+[node name="Road" type="Node3D"]
+script = ExtResource("1_vsxyy")
+
+[node name="Mesh" type="CSGPolygon3D" parent="."]
+mode = 2
+path_node = NodePath("../Path3D")
+path_interval_type = 0
+path_interval = 1.0
+path_simplify_angle = 0.0
+path_rotation = 2
+path_local = true
+path_continuous_u = true
+path_u_distance = 1.0
+path_joined = false
+
+[node name="Path3D" type="Path3D" parent="."]
+curve = SubResource("Curve3D_uh3se")

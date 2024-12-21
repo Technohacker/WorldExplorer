@@ -1,13 +1,15 @@
 extends Node
 
-func prepare_tile_for_osmjson(json: String, gps_coords: Vector2) -> Node3D:
-	var root = Node3D.new()
+const Building = preload("res://MapBuilder/Building/Building.tscn")
+const Road = preload("res://MapBuilder/Road/Road.tscn")
+
+func prepare_tile_for_osmjson(root: Node3D, json: String, gps_coords: Vector2):
 	var parsed = JSON.parse_string(json)
 	if parsed == null:
 		print(json)
-		return root
+		return
 
-	var nodes = {}
+	var node_cache = {}
 
 	for element in parsed["elements"]:
 		var element_id = element["id"]
@@ -21,159 +23,126 @@ func prepare_tile_for_osmjson(json: String, gps_coords: Vector2) -> Node3D:
 				)
 				var rel_coords = coords - gps_coords
 
-				nodes[element_id] = {
+				node_cache[element_id] = {
 					"pos": coords_to_meters(rel_coords),
 				}
 
 			"way":
+				await get_tree().process_frame
 				var way_nodes: Array = element["nodes"]
 
+				var entity: Node3D
 				if element_tags.get("building") != null:
 					# Building
-					var footprint = PackedVector2Array()
-
-					for id in way_nodes:
-						var node = nodes.get(id)
-						if node != null:
-							var pos: Vector3 = node["pos"]
-							footprint.push_back(Vector2(pos.x, pos.z))
-
-					# Default 1 floor (3 meters)
-					var height: float = 3
-
-					if element_tags.has("height"):
-						# Explicit height in meters
-						height = float(element_tags["height"])
-					elif element_tags.has("building:levels"):
-						# Height in floors
-						height = 3.0 * float(element_tags["building:levels"])
-
-					root.add_child(build_building(footprint, height))
-
+					entity = build_building(node_cache, way_nodes, element_tags)
 				elif element_tags.get("highway") != null:
 					# Road
-					var road_type: String = element_tags["highway"]
-					const ACTUAL_ROADS = [
-						"motorway",
-						"trunk",
-						"primary",
-						"secondary",
-						"tertiary",
-						"unclassified",
-						"residential",
+					entity = build_road(node_cache, way_nodes, element_tags)
 
-						"motorway_link",
-						"trunk_link",
-						"primary_link",
-						"secondary_link",
-						"tertiary_link",
-
-						"living_street",
-						"service",
-						"pedestrian",
-						"track",
-						"bus_guideway",
-						"escape",
-						"raceway",
-						"road",
-						"busway",
-						
-						"footway",
-						"bridleway",
-						"path",
-						
-						"cycleway",
-					]
-					if road_type not in ACTUAL_ROADS:
-						#print(element_tags)
-						continue
-
-					# Default 1 lane
-					var width = 4
-					if element_tags.has("width"):
-						width = float(element_tags["width"])
-					elif element_tags.has("lanes"):
-						width = 4 * int(element_tags["lanes"])
-
-					var road_path = PackedVector3Array()
-					# Loop over the points
-					for segment_id in way_nodes:
-						var node = nodes.get(segment_id)
-						if node == null:
-							continue
-
-						road_path.push_back(node["pos"])
-					root.add_child(build_road(road_path, width))
+				entity.name = str(element_id)
+				root.add_child(entity)
 
 			_:
-				print(element)
+				push_warning("Unknown element?", element)
 
-	return root
+func build_building(node_cache: Dictionary, way_nodes: Array, tags: Dictionary) -> Node3D:
+	var footprint = PackedVector2Array()
 
-func build_building(footprint: PackedVector2Array, height: float) -> Node3D:
-	var building = Node3D.new()
-	
-	if footprint.is_empty():
-		return building
+	for id in way_nodes:
+		var node = node_cache.get(id)
+		if node != null:
+			var pos: Vector3 = node["pos"]
+			footprint.push_back(Vector2(pos.x, pos.z))
 
-	var pos_2d = footprint[0]
-	
+	if footprint.size() < 3:
+		return Node3D.new()
+
+	var building_pos = footprint[0]
 	for i in range(footprint.size()):
-		footprint[i] -= pos_2d
-		pass
+		footprint[i] -= building_pos
 
-	building.position = Vector3(pos_2d.x, 0, pos_2d.y)
+	# Default 1 floor (3 meters)
+	var height: float = 3
 
-	# Create the Mesh
-	var mesh = CSGPolygon3D.new()
+	if tags.has("height"):
+		# Explicit height in meters
+		height = float(tags["height"])
+	elif tags.has("building:levels"):
+		# Height in floors
+		height = 3.0 * float(tags["building:levels"])
 
-	mesh.polygon = footprint
-	mesh.depth = height
-	mesh.rotation.x = deg_to_rad(90)
-	
-	building.add_child(mesh)
+	var building = Building.instantiate()
+	building.position = Vector3(building_pos.x, 0, building_pos.y)
+	building.footprint = footprint
+	building.height = height
 
 	return building
 
-func build_road(path: PackedVector3Array, width: float) -> Node3D:
-	var road = Node3D.new()
-	
-	if path.is_empty():
-		return road
+func build_road(node_cache: Dictionary, way_nodes: Array, tags: Dictionary) -> Node3D:
+	var road_type: String = tags["highway"]
+	const ACTUAL_ROADS = [
+		"motorway",
+		"trunk",
+		"primary",
+		"secondary",
+		"tertiary",
+		"unclassified",
+		"residential",
 
-	var path_node = Path3D.new()
-	path_node.curve = Curve3D.new()
+		"motorway_link",
+		"trunk_link",
+		"primary_link",
+		"secondary_link",
+		"tertiary_link",
 
-	var path_start = path[0]
-	for point in path:
-		path_node.curve.add_point(point - path_start)
+		"living_street",
+		"service",
+		"pedestrian",
+		"track",
+		"bus_guideway",
+		"escape",
+		"raceway",
+		"road",
+		"busway",
+		
+		"footway",
+		"bridleway",
+		"path",
+		
+		"cycleway",
+	]
+	if road_type not in ACTUAL_ROADS:
+		#print(element_tags)
+		return Node3D.new()
 
-	road.position = path_start
-	road.add_child(path_node)
+	var road_path = PackedVector3Array()
+	# Loop over the points
+	for segment_id in way_nodes:
+		var node = node_cache.get(segment_id)
+		if node == null:
+			continue
 
-	var mesh = CSGPolygon3D.new()
-	road.add_child(mesh)
+		road_path.push_back(node["pos"])
 
-	mesh.mode = CSGPolygon3D.MODE_PATH
-	mesh.path_local = true
-	mesh.polygon = PackedVector2Array([
-		Vector2(0, 0),
-		Vector2(width, 0),
-		Vector2(width, 1),
-		Vector2(0, 1),
-	])
-	mesh.path_node = mesh.get_path_to(path_node)
+	if road_path.size() < 2:
+		#print(element_tags)
+		return Node3D.new()
 
-	#var mesh = PlaneMesh.new()
-	#mesh.center_offset = Vector3(0, 0, -length / 2)
-	#mesh.size = Vector2(width, length)
-	#mesh.material = StandardMaterial3D.new()
-	#(mesh.material as StandardMaterial3D).albedo_color = Color(randf(), randf(), randf())
+	var road_pos = road_path[0]
+	for i in range(road_path.size()):
+		road_path[i] -= road_pos
 
-	#var road = MeshInstance3D.new()
-	#road.add_child(CSGSphere3D.new())
-	#road.look_at_from_position(start_pos, end_pos)
-	#road.mesh = mesh
+	# Default 1 lane
+	var width = 4
+	if tags.has("width"):
+		width = float(tags["width"])
+	elif tags.has("lanes"):
+		width = 4 * int(tags["lanes"])
+
+	var road = Road.instantiate()
+	road.position = road_pos
+	road.width = width
+	road.path = road_path
 
 	return road
 
