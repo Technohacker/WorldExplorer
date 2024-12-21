@@ -1,0 +1,58 @@
+[gd_scene load_steps=7 format=3 uid="uid://drgre6mdj0efq"]
+
+[ext_resource type="Script" path="res://Game/Game.gd" id="1_54a3f"]
+[ext_resource type="PackedScene" uid="uid://bshurailj530m" path="res://Vehicle/Vehicle.tscn" id="1_88t5x"]
+
+[sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_3tpkc"]
+plane = Plane(0, 1, 0, 50)
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_jjnmd"]
+sky_top_color = Color(0.190234, 0.233818, 0.294432, 1)
+sky_horizon_color = Color(0.189429, 0.194895, 0.203524, 1)
+ground_horizon_color = Color(0.189429, 0.194895, 0.203524, 1)
+sun_angle_max = 6.65
+sun_curve = 7.532
+energy_multiplier = 2.0
+
+[sub_resource type="Sky" id="Sky_l5g82"]
+sky_material = SubResource("ProceduralSkyMaterial_jjnmd")
+
+[sub_resource type="Environment" id="Environment_h4802"]
+background_mode = 2
+sky = SubResource("Sky_l5g82")
+ambient_light_sky_contribution = 0.0
+fog_light_color = Color(0.121505, 0.242787, 0.310306, 1)
+fog_sky_affect = 0.96
+fog_height = 0.85
+fog_height_density = 1.497
+fog_depth_end = 1839.0
+volumetric_fog_enabled = true
+volumetric_fog_density = 0.0055
+volumetric_fog_emission = Color(0.81, 0.3726, 0.3726, 1)
+volumetric_fog_length = 216.55
+volumetric_fog_ambient_inject = 0.6
+
+[node name="Game" type="Node3D"]
+script = ExtResource("1_54a3f")
+
+[node name="Vehicle" parent="." instance=ExtResource("1_88t5x")]
+transform = Transform3D(-1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, 0, 4.33126, 0)
+
+[node name="Camera3D" type="Camera3D" parent="Vehicle"]
+transform = Transform3D(1, 0, 0, 0, 0.983255, 0.182236, 0, -0.182236, 0.983255, 0, 1.934, 5.57)
+current = true
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.822293, 0.569064, 0, -0.569064, 0.822293, 0, 0, 0)
+sky_mode = 2
+
+[node name="Area3D" type="Area3D" parent="."]
+gravity_space_override = 3
+gravity_point_center = Vector3(0, 1, 0)
+gravity_direction = Vector3(0, 1, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+shape = SubResource("WorldBoundaryShape3D_3tpkc")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_h4802")
